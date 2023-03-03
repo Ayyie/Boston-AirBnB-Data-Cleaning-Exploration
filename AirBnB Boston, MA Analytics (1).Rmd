@@ -1,0 +1,104 @@
+---
+title: "AirBnB Data Analytics (Boston, MA)"
+author: "Aisha Elamah"
+date: "2023-03-02"
+output: html_document
+---
+# working with the Boston, MA AirBnB dataset to find insghts on 
+#customer behaviour.
+# firstly unwanted columns will be deleted. Only data necessary for this analysis will be left.
+```{r}
+list <-listings2 %>%
+  select(-c(3,4,8,9,11,12,13,16,17,18,19,20,21,28,29,35,
+                     39,40,41,42,43,45,48))
+head(list)
+```
+
+#cleaning data. removing N/A values, checking for duplicates.
+
+```{r}
+str(list)
+duplicated(list)
+head(list)
+```
+  #removing missing data
+
+
+```{r}
+
+list <- na.omit(list)
+unique_names <- unique(list$property_type)
+head(list)
+```
+#looking at data for the top 5 booked AirBnB based on neighbourhoods.
+```{r}
+list2 <- list %>%
+  group_by(neighbourhood_cleansed) %>%
+  summarise(count = n()) %>%
+  top_n(n = 5, wt = count)
+
+ggplot(list2, aes(x=neighbourhood_cleansed, y=count))+
+  geom_bar(stat = "identity")
+
+```
+
+#using the Min & Max function to find the most expensive and the least expensive fees for AirBnB in Boston MA
+
+```{r}
+print(max(list$price))
+print(min(list$price))
+```
+
+#looking up the most AirBnB bookings based on the type of property. The most popular neighbourhoods appear to be on average the cheapest neighbourhoods.
+
+```{r}
+list3 <- list %>%
+  group_by(property_type) %>%
+  summarise(count = n()) %>%
+  top_n(n = 10, wt = count)
+
+ggplot(list3, aes(x=count, y=property_type))+
+  geom_bar(stat = "identity")
+
+```
+
+# in order to use the mean function for our calculation of average price, the price column has to be cleaned and converted to nueric values.
+
+```{r}
+list$price <- as.numeric(gsub("\\$", "", list$price))
+
+head(list)
+```
+
+#calculating the average price of top 3 bookings based on neighbourhoods
+
+```{r}
+top_5_cheapest <- list %>%
+  group_by(neighbourhood_cleansed) %>%
+  summarize(avg_price = mean(price)) %>%
+  arrange(avg_price) %>%
+  slice_head(n = 3)
+ggplot(top_5_cheapest, aes(x=avg_price, y=neighbourhood_cleansed))+
+  geom_bar(stat = "identity")
+```
+
+
+
+
+#looking at the availabilty of AirBnB spaces in the various neighbourhoods.
+```{r}
+df_summary <- list %>% group_by(neighbourhood_cleansed) %>% 
+  summarize(total_available = sum(availability_365))
+
+print(df_summary)
+
+ggplot(df_summary, aes(x = neighbourhood_cleansed, y = total_available)) + 
+  geom_bar(stat = "identity") +
+  labs(title = "Total Available Days by Neighborhood", x ="total available " , y = "neighborhood_cleansed")
+
+
+
+
+```
+
+
